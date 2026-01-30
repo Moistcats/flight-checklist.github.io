@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Drone Pre-Flight Checklist</title>
+  <style>
+    :root{
+      --bg1:#0b1220;
+      --bg2:#1a0f2e;
+      --card:#121b30;
+      --border:#2a3a67;
+      --muted:#c7cfe8;
+      --good:#49f2a6;
+      --warn:#ffd166;
+      --bad:#ff5f7a;
+      --accent:#4f7cff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      background:
+        radial-gradient(1200px 700px at 15% 20%, rgba(79,124,255,.16), transparent 55%),
+        radial-gradient(900px 600px at 80% 70%, rgba(255,102,196,.14), transparent 55%),
+        linear-gradient(140deg, var(--bg1), var(--bg2));
+      color:white;
+      padding: 22px 14px;
+    }
+    .wrap{ width:min(900px, 96vw); }
+
+    .top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 14px;
+    }
+    h1{
+      margin:0;
+      font-size: 28px;
+      letter-spacing:.2px;
+      transform: rotate(-.6deg);
+    }
+    .sub{
+      margin:8px 0 0;
+      color: var(--muted);
+      line-height:1.35;
+      max-width: 62ch;
+    }
+    .tag{
+      font-size:12px;
+      color: var(--muted);
+      border:1px solid rgba(199,207,232,.25);
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(14,22,42,.7);
+      transform: rotate(1.8deg);
+      user-select:none;
+      white-space:nowrap;
+    }
+
+    .banner{
+      border: 2px dashed rgba(42,58,103,.95);
+      border-radius: 20px 26px 18px 28px;
+      background: rgba(18,27,48,.92);
+      padding: 14px 16px;
+      display:flex;
+      flex-wrap:wrap;
+      gap: 12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 12px;
+    }
+    .status{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .status b{ font-size: 14px; letter-spacing:.3px; }
+    .status small{ color: var(--muted); }
+
+    .progressRow{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 280px;
+      flex: 1;
+      justify-content:flex-end;
+    }
+    .bar{
+      height: 12px;
+      background: rgba(14,22,42,.8);
+      border: 1px solid rgba(42,58,103,.9);
+      border-radius: 999px;
+      overflow:hidden;
+      flex: 1;
+      min-width: 180px;
+    }
+    .fill{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(79,124,255,.95), rgba(73,242,166,.9));
+      border-radius: 999px;
+      transition: width .18s ease;
+    }
+    .pct{
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      min-width: 78px;
+      text-align:right;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 860px){
+      .grid{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .card{
+      background: rgba(18,27,48,.92);
+      border: 1px solid rgba(42,58,103,.95);
+      border-radius: 18px 12px 20px 14px;
+      padding: 14px 14px 10px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.25);
+      position:relative;
+    }
+    .card h2{
+      margin:0 0 10px;
+      font-size: 16px;
+      letter-spacing:.2px;
+      transform: rotate(.4deg);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .card h2 span{
+      color: rgba(199,207,232,.9);
+      font-weight: 700;
+      font-size: 12px;
+      transform: rotate(-.5deg);
+      border:1px solid rgba(199,207,232,.2);
+      padding: 4px 8px;
+      border-radius:999px;
+      background: rgba(14,22,42,.6);
+    }
+
+    .item{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding: 10px 10px;
+      border-radius: 14px 18px 12px 16px;
+      background: rgba(14,22,42,.55);
+      border: 1px solid rgba(42,58,103,.55);
+      margin-bottom: 8px;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .item:active{ transform: translateY(1px); }
+    .item:hover{ filter: brightness(1.05); }
+
+    input[type="checkbox"]{
+      width: 20px; height: 20px;
+      accent-color: var(--good);
+      margin-top: 1px;
+      cursor:pointer;
+      flex: 0 0 auto;
+    }
+    label{
+      cursor:pointer;
+      display:block;
+      width:100%;
+    }
+    .title{
+      font-weight: 850;
+      letter-spacing:.2px;
+    }
+    .hint{
+      color: rgba(199,207,232,.85);
+      font-size: 12px;
+      margin-top: 2px;
+      line-height: 1.35;
+    }
+
+    .actions{
+      margin-top: 12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    button{
+      border:0;
+      cursor:pointer;
+      font-weight: 900;
+      border-radius: 16px 12px 18px 14px;
+      padding: 12px 14px;
+      color:white;
+    }
+    .primary{
+      background: linear-gradient(135deg, rgba(79,124,255,.95), rgba(255,102,196,.72));
+      box-shadow: 0 12px 25px rgba(0,0,0,.22);
+      transform: rotate(-.35deg);
+    }
+    .secondary{
+      background: rgba(14,22,42,.8);
+      border: 1px solid rgba(42,58,103,.95);
+      transform: rotate(.25deg);
+    }
+    .primary:active,.secondary:active{ transform: translateY(2px); }
+
+    .ready{
+      margin-top: 12px;
+      border-radius: 18px 18px 14px 22px;
+      padding: 14px 16px;
+      border: 2px dashed rgba(73,242,166,.7);
+      background: rgba(73,242,166,.10);
+      display:none;
+      animation: pop .22s ease-out;
+    }
+    .ready b{ color: var(--good); font-size: 16px; }
+    .ready small{ display:block; margin-top:6px; color: rgba(199,207,232,.92); }
+
+    .notReady{
+      margin-top: 12px;
+      border-radius: 18px 18px 14px 22px;
+      padding: 14px 16px;
+      border: 2px dashed rgba(255,209,102,.55);
+      background: rgba(255,209,102,.10);
+      animation: pop .22s ease-out;
+    }
+    .notReady b{ color: var(--warn); font-size: 16px; }
+    .notReady small{ display:block; margin-top:6px; color: rgba(199,207,232,.92); }
+
+    @keyframes pop {
+      0%{ transform: scale(.97) rotate(-.3deg); }
+      60%{ transform: scale(1.02) rotate(.3deg); }
+      100%{ transform: scale(1) rotate(0deg); }
+    }
+
+    /* small notes */
+    .notes{
+      margin-top: 12px;
+      background: rgba(14,22,42,.55);
+      border: 1px solid rgba(42,58,103,.55);
+      border-radius: 16px 14px 18px 12px;
+      padding: 12px;
+    }
+    .notes label{ cursor: default; }
+    textarea{
+      width:100%;
+      min-height: 80px;
+      resize: vertical;
+      background: rgba(0,0,0,.2);
+      border: 1px solid rgba(42,58,103,.65);
+      border-radius: 12px;
+      padding: 10px 10px;
+      color:white;
+      font-family: inherit;
+      outline: none;
+    }
+    .foot{
+      margin-top: 10px;
+      color: rgba(199,207,232,.72);
+      font-size: 12px;
+      line-height:1.35;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>Drone Pre-Flight Checklist</h1>
+        <div class="sub">A tiny, consistent checklist to reduce “oopsies” before takeoff. Checks auto-save on this device.</div>
+      </div>
+      <div class="tag">Pre-flight checklist • DAC Internal demo</div>
+    </div>
+
+    <div class="banner">
+      <div class="status">
+        <b id="statusTitle">Status: In Progress</b>
+        <small id="statusLine">Check items as you go. When all are complete, you’ll see “READY TO FLY”.</small>
+      </div>
+      <div class="progressRow">
+        <div class="bar" aria-label="progress">
+          <div class="fill" id="fill"></div>
+        </div>
+        <div class="pct" id="pct">0/0</div>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="notes">
+      <div class="title" style="margin-bottom:6px;">Notes (optional)</div>
+      <textarea id="notes" placeholder="Example: Site has tall light poles on east side. Wind picked up at 10:22."></textarea>
+      <div class="foot">Tip: Add mission-specific hazards, changes, or approvals here.</div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="exportBtn">Export Report 📋</button>
+      <button class="secondary" id="resetBtn">Reset Checklist 🧽</button>
+    </div>
+
+    <div class="ready" id="readyBox">
+      <b>READY TO FLY ✅</b>
+      <small>All checklist items completed. If conditions change, re-check relevant items.</small>
+    </div>
+
+    <div class="notReady" id="notReadyBox">
+      <b>NOT READY YET 🟡</b>
+      <small id="missingLine">Finish the remaining items to get a clean go/no-go.</small>
+    </div>
+
+    <div class="foot">
+      This is a demo utility. Always follow your organization’s SOP and applicable regulations.
+    </div>
+  </div>
+
+<script>
+  // Data (edit these to match our SOP) ---
+  const SECTIONS = [
+    {
+      name: "Aircraft & Payload",
+      items: [
+        ["airframe_ok", "Airframe inspection complete", "No cracks, loose parts, or damage. Props secure."],
+        ["payload_ok", "Payload secure & clean", "Gimbal/camera/lens clean. Payload mounted and locked."],
+        ["firmware_ok", "Firmware/app versions verified", "No unexpected updates mid-mission."],
+        ["homepoint_ok", "Home point & RTH settings confirmed", "RTH altitude set above obstacles."],
+      ]
+    },
+    {
+      name: "Power & Controls",
+      items: [
+        ["battery_ok", "Batteries charged & seated", "Main + controller batteries above threshold."],
+        ["spares_ok", "Spare batteries accounted for", "Enough packs for mission + contingency."],
+        ["calibration_ok", "IMU/compass calibration as needed", "Only if required; verify sensors healthy."],
+        ["sticks_ok", "Controls & failsafes tested", "Arming/disarming, GPS mode, RTH behavior known."],
+      ]
+    },
+    {
+      name: "Environment & Airspace",
+      items: [
+        ["weather_ok", "Weather within limits", "Wind/gusts/precip/visibility acceptable for platform."],
+        ["obstacles_ok", "Obstacle scan complete", "Trees, poles, wires, antennas, people, vehicles."],
+        ["airspace_ok", "Airspace checked", "Authorization as needed; NOTAMs checked (as required)."],
+        ["rf_ok", "RF/interference check", "Confirm strong link; avoid known interference sources."],
+      ]
+    },
+    {
+      name: "Mission & Safety",
+      items: [
+        ["brief_ok", "Crew brief complete", "Roles, hand signals, comms plan confirmed."],
+        ["geo_ok", "Geofence/mission boundaries set", "Keep-out zones configured for safety."],
+        ["privacy_ok", "Privacy / site permission confirmed", "Property permission, sensitive areas handled."],
+        ["emergency_ok", "Emergency plan reviewed", "Lost link, flyaway, battery emergency, landing zone."],
+      ]
+    }
+  ];
+
+  // Storage keys 
+  const KEY_CHECKS = "preflight_checks_v1";
+  const KEY_NOTES  = "preflight_notes_v1";
+  const KEY_SILLY  = "preflight_silly_v1";
+
+  // Cute lines
+  const SILLY_LINES = [
+    "Status: In Progress (the drone is patient, I am not)",
+    "Status: In Progress (we love a responsible pilot)",
+    "Status: In Progress (safety first, vibes second ✨)",
+    "Status: In Progress (tiny checks prevent big oopsies)",
+  ];
+
+  // Helpers 
+  const grid = document.getElementById("grid");
+  const fill = document.getElementById("fill");
+  const pct = document.getElementById("pct");
+  const statusTitle = document.getElementById("statusTitle");
+  const statusLine = document.getElementById("statusLine");
+  const readyBox = document.getElementById("readyBox");
+  const notReadyBox = document.getElementById("notReadyBox");
+  const missingLine = document.getElementById("missingLine");
+  const notesEl = document.getElementById("notes");
+
+  function vibrate(kind){
+    if(!("vibrate" in navigator)) return; // mostly phones
+    if(kind === "check") navigator.vibrate(15);
+    if(kind === "ready") navigator.vibrate([20,30,20]);
+    if(kind === "reset") navigator.vibrate([40,25,40]);
+  }
+
+  function loadChecks(){
+    try { return JSON.parse(localStorage.getItem(KEY_CHECKS) || "{}"); }
+    catch { return {}; }
+  }
+  function saveChecks(obj){
+    localStorage.setItem(KEY_CHECKS, JSON.stringify(obj));
+  }
+
+  function render(){
+    grid.innerHTML = "";
+
+    const checks = loadChecks();
+
+    let total = 0;
+    let done = 0;
+    let missing = [];
+
+    for(const section of SECTIONS){
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const h2 = document.createElement("h2");
+      const left = document.createElement("div");
+      left.textContent = section.name;
+
+      const pill = document.createElement("span");
+      const sectionTotal = section.items.length;
+      const sectionDone = section.items.filter(([id]) => !!checks[id]).length;
+      pill.textContent = `${sectionDone}/${sectionTotal}`;
+
+      h2.appendChild(left);
+      h2.appendChild(pill);
+      card.appendChild(h2);
+
+      for(const [id, title, hint] of section.items){
+        total++;
+        const checked = !!checks[id];
+        if(checked) done++; else missing.push(title);
+
+        const row = document.createElement("div");
+        row.className = "item";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = id;
+        cb.checked = checked;
+
+        const lab = document.createElement("label");
+        lab.setAttribute("for", id);
+
+        const t = document.createElement("div");
+        t.className = "title";
+        t.textContent = title;
+
+        const h = document.createElement("div");
+        h.className = "hint";
+        h.textContent = hint;
+
+        lab.appendChild(t);
+        lab.appendChild(h);
+
+        cb.addEventListener("change", () => {
+          const now = loadChecks();
+          now[id] = cb.checked;
+          saveChecks(now);
+          vibrate("check");
+          render();
+        });
+
+        row.appendChild(cb);
+        row.appendChild(lab);
+        card.appendChild(row);
+      }
+
+      grid.appendChild(card);
+    }
+
+    // Progress UI
+    pct.textContent = `${done}/${total}`;
+    const percent = total ? Math.round((done / total) * 100) : 0;
+    fill.style.width = percent + "%";
+
+    // Status + Ready logic
+    if(done === total && total > 0){
+      statusTitle.textContent = "Status: READY TO FLY ✅";
+      statusLine.textContent = "All items complete. If anything changes, re-check what matters.";
+      readyBox.style.display = "block";
+      notReadyBox.style.display = "none";
+      vibrate("ready");
+    } else {
+      statusTitle.textContent = "Status: In Progress";
+      const silly = (localStorage.getItem(KEY_SILLY) || "true") === "true";
+      statusLine.textContent = silly
+        ? SILLY_LINES[Math.floor(Math.random() * SILLY_LINES.length)]
+        : "Check items as you go. When all are complete, you’ll see “READY TO FLY”.";
+      readyBox.style.display = "none";
+      notReadyBox.style.display = "block";
+
+      const remain = total - done;
+      const peek = missing.slice(0, 3).join(", ");
+      missingLine.textContent = remain <= 0
+        ? "Almost there."
+        : `Remaining: ${remain}. Next up: ${peek}${missing.length > 3 ? "…" : ""}`;
+    }
+  }
+
+  // Notes autosave
+  notesEl.value = localStorage.getItem(KEY_NOTES) || "";
+  notesEl.addEventListener("input", () => {
+    localStorage.setItem(KEY_NOTES, notesEl.value);
+  });
+
+  // Export report
+  document.getElementById("exportBtn").addEventListener("click", async () => {
+    const checks = loadChecks();
+    const now = new Date();
+    const lines = [];
+
+    lines.push("DRONE PRE-FLIGHT REPORT");
+    lines.push(`Time: ${now.toLocaleString()}`);
+    lines.push("");
+
+    for(const section of SECTIONS){
+      lines.push(`[${section.name}]`);
+      for(const [id, title] of section.items){
+        const mark = checks[id] ? "✅" : "⬜";
+        lines.push(`${mark} ${title}`);
+      }
+      lines.push("");
+    }
+
+    const notes = (localStorage.getItem(KEY_NOTES) || "").trim();
+    lines.push("Notes:");
+    lines.push(notes ? notes : "(none)");
+    lines.push("");
+
+    const text = lines.join("\n");
+
+    try{
+      await navigator.clipboard.writeText(text);
+      statusTitle.textContent = "Status: Report copied ✅";
+      statusLine.textContent = "Paste it into an email, ticket, or mission log.";
+    } catch {
+      // Fallback: show in a prompt so user can copy manually
+      window.prompt("Copy your report:", text);
+    }
+  });
+
+  // Reset
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    localStorage.removeItem(KEY_CHECKS);
+    localStorage.removeItem(KEY_NOTES);
+    notesEl.value = "";
+    vibrate("reset");
+    render();
+    statusTitle.textContent = "Status: Reset complete 🧽";
+    statusLine.textContent = "Checklist cleared. The drone feels spiritually refreshed.";
+  });
+
+  // First render
+  render();
+</script>
+</body>
+</html>
